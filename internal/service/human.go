@@ -11,8 +11,8 @@ type Human struct {
 	logger *zap.Logger
 }
 
-func NewHuman(db *gorm.DB, logger *zap.Logger) *Group {
-	return &Group{db: db, logger: logger}
+func NewHuman(db *gorm.DB, logger *zap.Logger) *Human {
+	return &Human{db: db, logger: logger}
 }
 
 func (h *Human) Get(id uint) (*models.Human, error) {
@@ -55,7 +55,7 @@ func (h *Human) Update(human *models.Human) (*models.Human, error) {
 }
 
 func (h *Human) Delete(id uint) error {
-	var human *models.Group
+	var human *models.Human
 	result := h.db.Where("id = ?", id).Delete(&human)
 	return result.Error
 }
