@@ -35,9 +35,13 @@ func (g *Group) GetAll() ([]*models.Group, error) {
 	return groups, nil
 }
 
-func (g *Group) Create(group *models.Group) error {
+func (g *Group) Create(group *models.Group) (*models.Group, error) {
 	result := g.db.Create(group)
-	return result.Error
+	if result.Error != nil {
+		g.logger.Error(result.Error.Error())
+		return nil, result.Error
+	}
+	return group, nil
 }
 
 func (g *Group) Update(group *models.Group) (*models.Group, error) {

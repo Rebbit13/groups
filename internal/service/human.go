@@ -35,9 +35,13 @@ func (h *Human) GetAll() ([]*models.Human, error) {
 	return humans, nil
 }
 
-func (h *Human) Create(human *models.Human) error {
+func (h *Human) Create(human *models.Human) (*models.Human, error) {
 	result := h.db.Create(human)
-	return result.Error
+	if result.Error != nil {
+		h.logger.Error(result.Error.Error())
+		return nil, result.Error
+	}
+	return human, nil
 }
 
 func (h *Human) Update(human *models.Human) (*models.Human, error) {
