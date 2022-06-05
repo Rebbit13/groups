@@ -2,7 +2,6 @@ package service
 
 import (
 	"errors"
-	"fmt"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 	"groups/internal/models"
@@ -27,7 +26,6 @@ func (h *Human) checkGroupsToAttach(human *models.Human) error {
 		ids = append(ids, group.ID)
 	}
 	h.db.Where(ids).Find(&foundedGroups)
-	h.logger.Info(fmt.Sprintf("%s", foundedGroups))
 	if len(ids) != len(foundedGroups) {
 		return errors.New("groups to attach must exist")
 	}

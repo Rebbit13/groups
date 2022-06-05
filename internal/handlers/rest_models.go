@@ -7,11 +7,16 @@ import (
 )
 
 type GroupToUpdateAndCreate struct {
-	Name string `json:"name" binding:"required"`
+	Name   string `json:"name" binding:"required"`
+	Groups []uint `json:"sub_groups" binding:"required"`
 }
 
 func (g *GroupToUpdateAndCreate) convertToGORMModel() *models.Group {
-	return &models.Group{Name: g.Name}
+	groups := []*models.Group{}
+	for _, id := range g.Groups {
+		groups = append(groups, &models.Group{Model: gorm.Model{ID: id}})
+	}
+	return &models.Group{Name: g.Name, SubGroups: groups}
 }
 
 type HumanToUpdateAndCreate struct {
