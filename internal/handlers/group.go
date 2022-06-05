@@ -32,10 +32,19 @@ func (g *Group) parseIdFromContext(context *gin.Context) (uint, error) {
 	return uint(groupId), nil
 }
 
-func (g *Group) Create(context *gin.Context) {
+func (g *Group) bindContestToGroupToUpdateAndCreate(context *gin.Context) *GroupToUpdateAndCreate {
 	group := &GroupToUpdateAndCreate{}
 	err := context.BindJSON(group)
 	if err != nil {
+		g.errorHandler.BadRequest(context, err.Error())
+		return nil
+	}
+	return group
+}
+
+func (g *Group) Create(context *gin.Context) {
+	group := g.bindContestToGroupToUpdateAndCreate(context)
+	if group == nil {
 		return
 	}
 	groupCreated, err := g.service.Create(group.convertToGORMModel())
@@ -76,9 +85,8 @@ func (g *Group) Update(context *gin.Context) {
 	if err != nil {
 		return
 	}
-	group := &GroupToUpdateAndCreate{}
-	err = context.BindJSON(group)
-	if err != nil {
+	group := g.bindContestToGroupToUpdateAndCreate(context)
+	if group == nil {
 		return
 	}
 	groupToUpdate := group.convertToGORMModel()

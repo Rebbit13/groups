@@ -32,10 +32,19 @@ func (h *Human) parseIdFromContext(context *gin.Context) (uint, error) {
 	return uint(humanId), nil
 }
 
-func (h *Human) Create(context *gin.Context) {
+func (h *Human) bindContestToHumanToUpdateAndCreate(context *gin.Context) *HumanToUpdateAndCreate {
 	human := &HumanToUpdateAndCreate{}
 	err := context.BindJSON(human)
 	if err != nil {
+		h.errorHandler.BadRequest(context, err.Error())
+		return nil
+	}
+	return human
+}
+
+func (h *Human) Create(context *gin.Context) {
+	human := h.bindContestToHumanToUpdateAndCreate(context)
+	if human == nil {
 		return
 	}
 	humanCreated, err := h.service.Create(human.convertToGORMModel())
@@ -76,9 +85,8 @@ func (h *Human) Update(context *gin.Context) {
 	if err != nil {
 		return
 	}
-	human := &HumanToUpdateAndCreate{}
-	err = context.BindJSON(human)
-	if err != nil {
+	human := h.bindContestToHumanToUpdateAndCreate(context)
+	if human == nil {
 		return
 	}
 	humanToUpdate := human.convertToGORMModel()
