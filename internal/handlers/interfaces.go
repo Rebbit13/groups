@@ -7,7 +7,8 @@ type GroupService interface {
 	GetAll() ([]*models.Group, error)
 	Create(*models.Group) (*models.Group, error)
 	Update(*models.Group) (*models.Group, error)
-	Delete(id uint) error
+	Delete(uint) error
+	Members(uint, bool) ([]*models.Human, error)
 }
 
 type HumanService interface {
@@ -15,5 +16,5 @@ type HumanService interface {
 	GetAll() ([]*models.Human, error)
 	Create(*models.Human) (*models.Human, error)
 	Update(*models.Human) (*models.Human, error)
-	Delete(id uint) error
+	Delete(uint) error
 }

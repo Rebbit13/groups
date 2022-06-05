@@ -20,6 +20,7 @@ func BindGroupHandler(service GroupService, logger *zap.Logger, router *gin.Engi
 	router.POST("/group", handler.Create)
 	router.PATCH("/group/:id", handler.Update)
 	router.DELETE("/group/:id", handler.Delete)
+	router.GET("/group/:id/members", handler.Members)
 }
 
 func (g *Group) parseIdFromContext(context *gin.Context) (uint, error) {
@@ -112,4 +113,20 @@ func (g *Group) Delete(context *gin.Context) {
 		return
 	}
 	context.Status(204)
+}
+
+func (g *Group) Members(context *gin.Context) {
+	id, err := g.parseIdFromContext(context)
+	if err != nil {
+		return
+	}
+	flat, err := strconv.ParseBool(context.DefaultQuery("flat", "true"))
+	if err != nil {
+		g.errorHandler.BadRequest(context, "flat param must be bool")
+	}
+	members, err := g.service.Members(id, flat)
+	if err != nil {
+		g.errorHandler.InternalServerError(context)
+	}
+	context.JSON(200, members)
 }

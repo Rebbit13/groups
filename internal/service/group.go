@@ -59,6 +59,24 @@ func (g *Group) checkRecursionDependence(group *models.Group, subGroupsIdes []ui
 	return nil
 }
 
+func (g *Group) getAllSubgroups(group *models.Group) ([]*models.Group, error) {
+	var groups []*models.Group
+	var subGroups []*models.Group
+	result := g.db.Where("super_group_id = ?", group.ID).Find(&subGroups)
+	if result.Error != nil {
+		g.logger.Error(result.Error.Error())
+		return nil, result.Error
+	}
+	for _, subgroup := range subGroups {
+		groupsToAdd, err := g.getAllSubgroups(subgroup)
+		if err != nil {
+			return nil, err
+		}
+		groups = append(groups, groupsToAdd...)
+	}
+	return append(groups, group), nil
+}
+
 func (g *Group) Get(id uint) (*models.Group, error) {
 	var group *models.Group
 	result := g.db.Where("id = ?", id).First(&group)
@@ -117,4 +135,30 @@ func (g *Group) Delete(id uint) error {
 	var group *models.Group
 	result := g.db.Where("id = ?", id).Delete(&group)
 	return result.Error
+}
+
+func (g *Group) Members(id uint, flat bool) ([]*models.Human, error) {
+	ides := []uint{}
+	if flat {
+		ides = []uint{id}
+	} else {
+		group, err := g.Get(id)
+		if err != nil {
+			return nil, err
+		}
+		groups, err := g.getAllSubgroups(group)
+		if err != nil {
+			return nil, err
+		}
+		for _, g := range groups {
+			ides = append(ides, g.ID)
+		}
+	}
+	members := []*models.Human{}
+	result := g.db.Table("humen").Where("id IN (SELECT human_id FROM humans_groups WHERE group_id IN ?)", ides).Scan(&members)
+	if result.Error != nil {
+		g.logger.Error(result.Error.Error())
+		return nil, result.Error
+	}
+	return members, nil
 }
