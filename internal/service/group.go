@@ -32,7 +32,7 @@ func (g *Group) checkGroupsToAttach(group *models.Group) error {
 	foundedGroups := make([]*models.Group, 0)
 	g.db.Where(ids).Find(&foundedGroups)
 	if len(ids) != len(foundedGroups) {
-		return errors.New("groups to attach must exist")
+		return NewGroupToAttachNotExistError("groups to attach must exist")
 	}
 	return nil
 }
@@ -52,7 +52,7 @@ func (g *Group) checkRecursionDependence(group *models.Group, subGroupsIdes []ui
 		g.db.Where("id = ?", supergroupId).First(&superGroup)
 		fmt.Println(superGroup)
 		if g.checkIfIDinSlice(*supergroupId, subGroupsIdes) {
-			return errors.New("can not add because of the recursive group dependence")
+			return NewRecursiveGroupDependenciesError("can not add because of recursive group dependence")
 		}
 		supergroupId = superGroup.SuperGroupID
 	}
@@ -81,6 +81,9 @@ func (g *Group) Get(id uint) (*models.Group, error) {
 	var group *models.Group
 	result := g.db.Where("id = ?", id).First(&group)
 	if result.Error != nil {
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			return nil, NewRecordNotFound(fmt.Sprintf("There is no group with id %d", id))
+		}
 		g.logger.Error(result.Error.Error())
 		return nil, result.Error
 	}
@@ -134,13 +137,20 @@ func (g *Group) Update(group *models.Group) (*models.Group, error) {
 func (g *Group) Delete(id uint) error {
 	var group *models.Group
 	result := g.db.Where("id = ?", id).Delete(&group)
+	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+		return NewRecordNotFound(fmt.Sprintf("There is no group with id %d", id))
+	}
 	return result.Error
 }
 
 func (g *Group) Members(id uint, flat bool) ([]*models.Human, error) {
 	ides := make([]uint, 0)
 	if flat {
-		ides = []uint{id}
+		group, err := g.Get(id)
+		if err != nil {
+			return nil, err
+		}
+		ides = []uint{group.ID}
 	} else {
 		group, err := g.Get(id)
 		if err != nil {

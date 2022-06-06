@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"fmt"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 	"strconv"
@@ -25,7 +24,6 @@ func BindHumanHandler(service HumanService, logger *zap.Logger, router *gin.Engi
 func (h *Human) parseIdFromContext(context *gin.Context) (uint, error) {
 	humanId, err := strconv.ParseUint(context.Param("id"), 10, 64)
 	if err != nil {
-		h.logger.Error(err.Error())
 		h.errorHandler.BadRequest(context, "Can not parse id. Must be unsigned integer.")
 		return 0, err
 	}
@@ -49,8 +47,7 @@ func (h *Human) Create(context *gin.Context) {
 	}
 	humanCreated, err := h.service.Create(human.convertToGORMModel())
 	if err != nil {
-		h.logger.Error(err.Error(), zap.String("status_code", "500"))
-		h.errorHandler.InternalServerError(context)
+		h.errorHandler.HandleError(context, err)
 		return
 	}
 	context.JSON(201, humanCreated)
@@ -63,8 +60,7 @@ func (h *Human) Get(context *gin.Context) {
 	}
 	human, err := h.service.Get(id)
 	if err != nil {
-		h.logger.Error(err.Error())
-		h.errorHandler.NotFound(context, fmt.Sprintf("There is no human with id %d", id))
+		h.errorHandler.HandleError(context, err)
 		return
 	}
 	context.JSON(200, human)
@@ -73,8 +69,7 @@ func (h *Human) Get(context *gin.Context) {
 func (h *Human) GetAll(context *gin.Context) {
 	humans, err := h.service.GetAll()
 	if err != nil {
-		h.logger.Error(err.Error())
-		h.errorHandler.InternalServerError(context)
+		h.errorHandler.HandleError(context, err)
 		return
 	}
 	context.JSON(200, humans)
@@ -93,8 +88,7 @@ func (h *Human) Update(context *gin.Context) {
 	humanToUpdate.ID = id
 	humanUpdated, err := h.service.Update(humanToUpdate)
 	if err != nil {
-		h.logger.Error(err.Error(), zap.String("status_code", "500"))
-		context.Status(500)
+		h.errorHandler.HandleError(context, err)
 		return
 	}
 	context.JSON(200, humanUpdated)
@@ -107,8 +101,7 @@ func (h *Human) Delete(context *gin.Context) {
 	}
 	err = h.service.Delete(id)
 	if err != nil {
-		h.logger.Error(err.Error())
-		h.errorHandler.NotFound(context, fmt.Sprintf("There is no human with id %d", id))
+		h.errorHandler.HandleError(context, err)
 		return
 	}
 	context.Status(204)

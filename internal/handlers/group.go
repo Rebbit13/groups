@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"fmt"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 	"strconv"
@@ -50,8 +49,7 @@ func (g *Group) Create(context *gin.Context) {
 	}
 	groupCreated, err := g.service.Create(group.convertToGORMModel())
 	if err != nil {
-		g.logger.Error(err.Error(), zap.String("status_code", "500"))
-		g.errorHandler.InternalServerError(context)
+		g.errorHandler.HandleError(context, err)
 		return
 	}
 	context.JSON(201, groupCreated)
@@ -64,8 +62,7 @@ func (g *Group) Get(context *gin.Context) {
 	}
 	group, err := g.service.Get(id)
 	if err != nil {
-		g.logger.Error(err.Error())
-		g.errorHandler.NotFound(context, fmt.Sprintf("There is no group with id %d", id))
+		g.errorHandler.HandleError(context, err)
 		return
 	}
 	context.JSON(200, group)
@@ -74,8 +71,7 @@ func (g *Group) Get(context *gin.Context) {
 func (g *Group) GetAll(context *gin.Context) {
 	groups, err := g.service.GetAll()
 	if err != nil {
-		g.logger.Error(err.Error())
-		g.errorHandler.InternalServerError(context)
+		g.errorHandler.HandleError(context, err)
 		return
 	}
 	context.JSON(200, groups)
@@ -94,8 +90,7 @@ func (g *Group) Update(context *gin.Context) {
 	groupToUpdate.ID = id
 	groupUpdated, err := g.service.Update(groupToUpdate)
 	if err != nil {
-		g.logger.Error(err.Error(), zap.String("status_code", "500"))
-		context.Status(500)
+		g.errorHandler.HandleError(context, err)
 		return
 	}
 	context.JSON(200, groupUpdated)
@@ -108,8 +103,7 @@ func (g *Group) Delete(context *gin.Context) {
 	}
 	err = g.service.Delete(id)
 	if err != nil {
-		g.logger.Error(err.Error())
-		g.errorHandler.NotFound(context, fmt.Sprintf("There is no group with id %d", id))
+		g.errorHandler.HandleError(context, err)
 		return
 	}
 	context.Status(204)
@@ -126,7 +120,7 @@ func (g *Group) Members(context *gin.Context) {
 	}
 	members, err := g.service.Members(id, flat)
 	if err != nil {
-		g.errorHandler.InternalServerError(context)
+		g.errorHandler.HandleError(context, err)
 	}
 	context.JSON(200, members)
 }

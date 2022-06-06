@@ -2,6 +2,7 @@ package service
 
 import (
 	"errors"
+	"fmt"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 	"groups/internal/models"
@@ -27,7 +28,7 @@ func (h *Human) checkGroupsToAttach(human *models.Human) error {
 	}
 	h.db.Where(ids).Find(&foundedGroups)
 	if len(ids) != len(foundedGroups) {
-		return errors.New("groups to attach must exist")
+		return NewGroupToAttachNotExistError("groups to attach must exist")
 	}
 	return nil
 }
@@ -36,6 +37,9 @@ func (h *Human) Get(id uint) (*models.Human, error) {
 	var human *models.Human
 	result := h.db.Preload("Groups").Where("id = ?", id).First(&human)
 	if result.Error != nil {
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			return nil, NewRecordNotFound(fmt.Sprintf("There is no human with id %d", id))
+		}
 		h.logger.Error(result.Error.Error())
 		return nil, result.Error
 	}
@@ -91,5 +95,8 @@ func (h *Human) Update(human *models.Human) (*models.Human, error) {
 func (h *Human) Delete(id uint) error {
 	var human *models.Human
 	result := h.db.Where("id = ?", id).Delete(&human)
+	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+		return NewRecordNotFound(fmt.Sprintf("There is no human with id %d", id))
+	}
 	return result.Error
 }
