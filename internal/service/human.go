@@ -20,8 +20,8 @@ func (h *Human) checkGroupsToAttach(human *models.Human) error {
 	if len(human.Groups) == 0 {
 		return nil
 	}
-	ids := []uint{}
-	foundedGroups := []*models.Group{}
+	ids := make([]uint, 0)
+	foundedGroups := make([]*models.Group, 0)
 	for _, group := range human.Groups {
 		ids = append(ids, group.ID)
 	}

@@ -21,7 +21,7 @@ func (g *Group) checkGroupsToAttach(group *models.Group) error {
 	if len(group.SubGroups) == 0 {
 		return nil
 	}
-	ids := []uint{}
+	ids := make([]uint, 0)
 	for _, subGroup := range group.SubGroups {
 		ids = append(ids, subGroup.ID)
 	}
@@ -29,7 +29,7 @@ func (g *Group) checkGroupsToAttach(group *models.Group) error {
 	if err != nil {
 		return err
 	}
-	foundedGroups := []*models.Group{}
+	foundedGroups := make([]*models.Group, 0)
 	g.db.Where(ids).Find(&foundedGroups)
 	if len(ids) != len(foundedGroups) {
 		return errors.New("groups to attach must exist")
@@ -138,7 +138,7 @@ func (g *Group) Delete(id uint) error {
 }
 
 func (g *Group) Members(id uint, flat bool) ([]*models.Human, error) {
-	ides := []uint{}
+	ides := make([]uint, 0)
 	if flat {
 		ides = []uint{id}
 	} else {
@@ -154,7 +154,7 @@ func (g *Group) Members(id uint, flat bool) ([]*models.Human, error) {
 			ides = append(ides, g.ID)
 		}
 	}
-	members := []*models.Human{}
+	members := make([]*models.Human, 0)
 	result := g.db.Table("humen").Where("id IN (SELECT human_id FROM humans_groups WHERE group_id IN ?)", ides).Scan(&members)
 	if result.Error != nil {
 		g.logger.Error(result.Error.Error())

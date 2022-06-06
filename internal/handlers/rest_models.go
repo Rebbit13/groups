@@ -12,7 +12,7 @@ type GroupToUpdateAndCreate struct {
 }
 
 func (g *GroupToUpdateAndCreate) convertToGORMModel() *models.Group {
-	groups := []*models.Group{}
+	groups := make([]*models.Group, 0)
 	for _, id := range g.Groups {
 		groups = append(groups, &models.Group{Model: gorm.Model{ID: id}})
 	}
@@ -27,7 +27,7 @@ type HumanToUpdateAndCreate struct {
 }
 
 func (h *HumanToUpdateAndCreate) convertToGORMModel() *models.Human {
-	groups := []*models.Group{}
+	groups := make([]*models.Group, 0)
 	for _, id := range h.Groups {
 		groups = append(groups, &models.Group{Model: gorm.Model{ID: id}})
 	}
