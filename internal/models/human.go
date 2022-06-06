@@ -12,3 +12,7 @@ type Human struct {
 	Birthdate time.Time `json:"birthdate" binding:"required"`
 	Groups    []*Group  `gorm:"many2many:humans_groups;" json:"groups" binding:"required"`
 }
+
+func (h *Human) TableName() string {
+	return "humans"
+}

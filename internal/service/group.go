@@ -165,7 +165,7 @@ func (g *Group) Members(id uint, flat bool) ([]*models.Human, error) {
 		}
 	}
 	members := make([]*models.Human, 0)
-	result := g.db.Table("humen").Where("id IN (SELECT human_id FROM humans_groups WHERE group_id IN ?)", ides).Scan(&members)
+	result := g.db.Table("humans").Where("id IN (SELECT human_id FROM humans_groups WHERE group_id IN ?)", ides).Scan(&members)
 	if result.Error != nil {
 		g.logger.Error(result.Error.Error())
 		return nil, result.Error

@@ -1,13 +1,14 @@
 package main
 
 import (
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 	"groups/internal/handlers"
-	"groups/internal/models"
 	"groups/internal/service"
 	"groups/internal/storage"
 	"log"
+	"os"
 )
 
 func main() {
@@ -16,9 +17,10 @@ func main() {
 		log.Fatal(err)
 	}
 	defer logger.Sync()
-
-	entities := []interface{}{&models.Group{}, &models.Human{}}
-	db := storage.NewSqliteDatabase(entities)
+	db, err := storage.NewPostgres()
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	groupService := service.NewGroup(db, logger)
 	humanService := service.NewHuman(db, logger)
@@ -28,7 +30,7 @@ func main() {
 	handlers.BindGroupHandler(groupService, logger, router)
 	handlers.BindHumanHandler(humanService, logger, router)
 
-	if err = router.Run("127.0.0.1:8080"); err != nil {
+	if err = router.Run(fmt.Sprintf("0.0.0.0:%s", os.Getenv("APP_PORT"))); err != nil {
 		log.Fatal(err)
 	}
 }
