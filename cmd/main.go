@@ -12,6 +12,7 @@ import (
 	"groups/internal/storage"
 	"log"
 	"os"
+	"strconv"
 )
 
 // @title Groups Api
@@ -29,6 +30,7 @@ import (
 // @BasePath /v1
 // @schemes http
 func main() {
+
 	logger, err := zap.NewProduction()
 	if err != nil {
 		log.Fatal(err)
@@ -39,13 +41,26 @@ func main() {
 		log.Fatal(err)
 	}
 
+	testData := os.Getenv("TEST_DATA")
+	if testData == "" {
+		testData = "false"
+	}
+	ifNeedTestData, err := strconv.ParseBool(os.Getenv("TEST_DATA"))
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// generates test data in db
+	if ifNeedTestData {
+		handlers.GenerateTestData(db)
+	}
+
 	groupService := service.NewGroup(db, logger)
 	humanService := service.NewHuman(db, logger)
 
 	r := gin.Default()
 
 	v1 := r.Group("/v1")
-
 	handlers.BindGroupHandler(groupService, logger, v1)
 	handlers.BindHumanHandler(humanService, logger, v1)
 

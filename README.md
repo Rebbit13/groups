@@ -13,6 +13,11 @@ Can have members (humans)
 Human has name, surname, birthdate and can 
 be a member of some groups
 
+# Test data
+If you need test data you can set env var in .env
+TEST_DATA to value true
+> TEST_DATA=true
+
 # Run
 ---
 **NOTE**
