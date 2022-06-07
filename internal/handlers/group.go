@@ -12,12 +12,16 @@ type Group struct {
 	errorHandler *ErrorHandler
 }
 
-func BindGroupHandler(service GroupService, logger *zap.Logger, router *gin.Engine) {
+func NewGroupHandler(service GroupService, logger *zap.Logger) *Group {
+	return &Group{service: service, logger: logger, errorHandler: &ErrorHandler{logger: logger}}
+}
+
+func BindGroupHandler(service GroupService, logger *zap.Logger, router *gin.RouterGroup) {
 	handler := &Group{service: service, logger: logger, errorHandler: &ErrorHandler{logger: logger}}
 	router.GET("/group/:id", handler.Get)
 	router.GET("/group", handler.GetAll)
 	router.POST("/group", handler.Create)
-	router.PATCH("/group/:id", handler.Update)
+	router.PUT("/group/:id", handler.Update)
 	router.DELETE("/group/:id", handler.Delete)
 	router.GET("/group/:id/members", handler.Members)
 }
@@ -42,6 +46,16 @@ func (g *Group) bindContestToGroupToUpdateAndCreate(context *gin.Context) *Group
 	return group
 }
 
+// Create godoc
+// @Summary create group
+// @Tags group
+// @Accept json
+// @Produce json
+// @Param message  body  GroupToUpdateAndCreate  true  "Group"
+// @Success 201 {object} map[string]interface{}
+// @Failure 400  {object}  map[string]interface{}
+// @Failure 500
+// @Router /group [post]
 func (g *Group) Create(context *gin.Context) {
 	group := g.bindContestToGroupToUpdateAndCreate(context)
 	if group == nil {
@@ -55,34 +69,65 @@ func (g *Group) Create(context *gin.Context) {
 	context.JSON(201, groupCreated)
 }
 
-func (g *Group) Get(context *gin.Context) {
-	id, err := g.parseIdFromContext(context)
+// Get godoc
+// @Summary get one group by id
+// @Tags group
+// @Accept */*
+// @Produce json
+// @Param group_id path int true "Group ID"
+// @Success 200 {array} map[string]string
+// @Failure 400  {object}  map[string]interface{}
+// @Failure 404  {object}  map[string]interface{}
+// @Failure 500
+// @Router /group/{group_id} [get]
+func (g *Group) Get(ctx *gin.Context) {
+	id, err := g.parseIdFromContext(ctx)
 	if err != nil {
 		return
 	}
 	group, err := g.service.Get(id)
 	if err != nil {
-		g.errorHandler.HandleError(context, err)
+		g.errorHandler.HandleError(ctx, err)
 		return
 	}
-	context.JSON(200, group)
+	ctx.JSON(200, group)
 }
 
-func (g *Group) GetAll(context *gin.Context) {
+// GetAll godoc
+// @Summary get all groups
+// @Tags group
+// @Accept */*
+// @Produce json
+// @Success 200 {array} map[string]interface{}
+// @Failure 500
+// @Router /group [get]
+func (g *Group) GetAll(ctx *gin.Context) {
 	groups, err := g.service.GetAll()
 	if err != nil {
-		g.errorHandler.HandleError(context, err)
+		g.errorHandler.HandleError(ctx, err)
 		return
 	}
-	context.JSON(200, groups)
+	ctx.JSON(200, groups)
 }
 
-func (g *Group) Update(context *gin.Context) {
-	id, err := g.parseIdFromContext(context)
+// Update godoc
+// @Summary update one group by id
+// @Tags group
+// @Accept */*
+// @Produce json
+// @Param group_id path int true "Group ID"
+// @Param message  body  GroupToUpdateAndCreate  true  "Group"
+// @Success 200 {array} map[string]string
+// @Failure 400  {object}  map[string]interface{}
+// @Failure 404  {object}  map[string]interface{}
+// @Failure 500
+// @Router /group/{group_id} [put]
+func (g *Group) Update(ctx *gin.Context) {
+	id, err := g.parseIdFromContext(ctx)
 	if err != nil {
 		return
 	}
-	group := g.bindContestToGroupToUpdateAndCreate(context)
+	group := g.bindContestToGroupToUpdateAndCreate(ctx)
 	if group == nil {
 		return
 	}
@@ -90,37 +135,60 @@ func (g *Group) Update(context *gin.Context) {
 	groupToUpdate.ID = id
 	groupUpdated, err := g.service.Update(groupToUpdate)
 	if err != nil {
-		g.errorHandler.HandleError(context, err)
+		g.errorHandler.HandleError(ctx, err)
 		return
 	}
-	context.JSON(200, groupUpdated)
+	ctx.JSON(200, groupUpdated)
 }
 
-func (g *Group) Delete(context *gin.Context) {
-	id, err := g.parseIdFromContext(context)
+// Delete godoc
+// @Summary delete one group by id
+// @Tags group
+// @Accept */*
+// @Produce */*
+// @Param group_id path int true "Group ID"
+// @Success 204
+// @Failure 400  {object}  map[string]interface{}
+// @Failure 404  {object}  map[string]interface{}
+// @Failure 500
+// @Router /group/{group_id} [delete]
+func (g *Group) Delete(ctx *gin.Context) {
+	id, err := g.parseIdFromContext(ctx)
 	if err != nil {
 		return
 	}
 	err = g.service.Delete(id)
 	if err != nil {
-		g.errorHandler.HandleError(context, err)
+		g.errorHandler.HandleError(ctx, err)
 		return
 	}
-	context.Status(204)
+	ctx.Status(204)
 }
 
-func (g *Group) Members(context *gin.Context) {
-	id, err := g.parseIdFromContext(context)
+// Members godoc
+// @Summary get members of group by group id
+// @Tags group
+// @Accept */*
+// @Produce json
+// @Param group_id path int true "Group ID"
+// @Param default query bool false "bool default" default(true)
+// @Success 200 {array} map[string]interface{}
+// @Failure 400  {object}  map[string]interface{}
+// @Failure 404  {object}  map[string]interface{}
+// @Failure 500
+// @Router /group/{group_id}/members [get]
+func (g *Group) Members(ctx *gin.Context) {
+	id, err := g.parseIdFromContext(ctx)
 	if err != nil {
 		return
 	}
-	flat, err := strconv.ParseBool(context.DefaultQuery("flat", "true"))
+	flat, err := strconv.ParseBool(ctx.DefaultQuery("flat", "true"))
 	if err != nil {
-		g.errorHandler.BadRequest(context, "flat param must be bool")
+		g.errorHandler.BadRequest(ctx, "flat param must be bool")
 	}
 	members, err := g.service.Members(id, flat)
 	if err != nil {
-		g.errorHandler.HandleError(context, err)
+		g.errorHandler.HandleError(ctx, err)
 	}
-	context.JSON(200, members)
+	ctx.JSON(200, members)
 }

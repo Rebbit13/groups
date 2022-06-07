@@ -1,0 +1,394 @@
+basePath: /v1
+definitions:
+  handlers.GroupToUpdateAndCreate:
+    properties:
+      name:
+        type: string
+      sub_groups:
+        items:
+          type: integer
+        type: array
+    required:
+    - name
+    - sub_groups
+    type: object
+  handlers.HumanToUpdateAndCreate:
+    properties:
+      birthdate:
+        type: string
+      groups:
+        items:
+          type: integer
+        type: array
+      name:
+        type: string
+      surname:
+        type: string
+    required:
+    - birthdate
+    - groups
+    - name
+    - surname
+    type: object
+info:
+  contact:
+    email: support@swagger.io
+    name: API Support
+    url: http://www.swagger.io/support
+  description: This is a simple server for create groups and humans
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://swagger.io/terms/
+  title: Groups Api
+  version: "2.0"
+paths:
+  /group:
+    get:
+      consumes:
+      - '*/*'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              additionalProperties: true
+              type: object
+            type: array
+        "500":
+          description: ""
+      summary: get all groups
+      tags:
+      - group
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Group
+        in: body
+        name: message
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.GroupToUpdateAndCreate'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: ""
+      summary: create group
+      tags:
+      - group
+  /group/{group_id}:
+    delete:
+      consumes:
+      - '*/*'
+      parameters:
+      - description: Group ID
+        in: path
+        name: group_id
+        required: true
+        type: integer
+      produces:
+      - '*/*'
+      responses:
+        "204":
+          description: ""
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: ""
+      summary: delete one group by id
+      tags:
+      - group
+    get:
+      consumes:
+      - '*/*'
+      parameters:
+      - description: Group ID
+        in: path
+        name: group_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              additionalProperties:
+                type: string
+              type: object
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: ""
+      summary: get one group by id
+      tags:
+      - group
+    put:
+      consumes:
+      - '*/*'
+      parameters:
+      - description: Group ID
+        in: path
+        name: group_id
+        required: true
+        type: integer
+      - description: Group
+        in: body
+        name: message
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.GroupToUpdateAndCreate'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              additionalProperties:
+                type: string
+              type: object
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: ""
+      summary: update one group by id
+      tags:
+      - group
+  /group/{group_id}/members:
+    get:
+      consumes:
+      - '*/*'
+      parameters:
+      - description: Group ID
+        in: path
+        name: group_id
+        required: true
+        type: integer
+      - default: true
+        description: bool default
+        in: query
+        name: default
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              additionalProperties: true
+              type: object
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: ""
+      summary: get members of group by group id
+      tags:
+      - group
+  /human:
+    get:
+      consumes:
+      - '*/*'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              additionalProperties: true
+              type: object
+            type: array
+        "500":
+          description: ""
+      summary: get all humans
+      tags:
+      - human
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Human
+        in: body
+        name: message
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.HumanToUpdateAndCreate'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: ""
+      summary: create human
+      tags:
+      - human
+  /human/{human_id}:
+    delete:
+      consumes:
+      - '*/*'
+      parameters:
+      - description: Human ID
+        in: path
+        name: human_id
+        required: true
+        type: integer
+      produces:
+      - '*/*'
+      responses:
+        "204":
+          description: ""
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: ""
+      summary: delete one human by id
+      tags:
+      - human
+    get:
+      consumes:
+      - '*/*'
+      parameters:
+      - description: Human ID
+        in: path
+        name: human_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              additionalProperties:
+                type: string
+              type: object
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: ""
+      summary: get one human by id
+      tags:
+      - human
+    put:
+      consumes:
+      - '*/*'
+      parameters:
+      - description: Human ID
+        in: path
+        name: human_id
+        required: true
+        type: integer
+      - description: Human
+        in: body
+        name: message
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.HumanToUpdateAndCreate'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              additionalProperties:
+                type: string
+              type: object
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: ""
+      summary: update one human by id
+      tags:
+      - human
+schemes:
+- http
+swagger: "2.0"

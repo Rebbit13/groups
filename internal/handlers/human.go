@@ -12,7 +12,7 @@ type Human struct {
 	errorHandler *ErrorHandler
 }
 
-func BindHumanHandler(service HumanService, logger *zap.Logger, router *gin.Engine) {
+func BindHumanHandler(service HumanService, logger *zap.Logger, router *gin.RouterGroup) {
 	handler := &Human{service: service, logger: logger, errorHandler: &ErrorHandler{logger: logger}}
 	router.GET("/human/:id", handler.Get)
 	router.GET("/human", handler.GetAll)
@@ -21,66 +21,107 @@ func BindHumanHandler(service HumanService, logger *zap.Logger, router *gin.Engi
 	router.DELETE("/human/:id", handler.Delete)
 }
 
-func (h *Human) parseIdFromContext(context *gin.Context) (uint, error) {
-	humanId, err := strconv.ParseUint(context.Param("id"), 10, 64)
+func (h *Human) parseIdFromContext(ctx *gin.Context) (uint, error) {
+	humanId, err := strconv.ParseUint(ctx.Param("id"), 10, 64)
 	if err != nil {
-		h.errorHandler.BadRequest(context, "Can not parse id. Must be unsigned integer.")
+		h.errorHandler.BadRequest(ctx, "Can not parse id. Must be unsigned integer.")
 		return 0, err
 	}
 	return uint(humanId), nil
 }
 
-func (h *Human) bindContestToHumanToUpdateAndCreate(context *gin.Context) *HumanToUpdateAndCreate {
+func (h *Human) bindContestToHumanToUpdateAndCreate(ctx *gin.Context) *HumanToUpdateAndCreate {
 	human := &HumanToUpdateAndCreate{}
-	err := context.BindJSON(human)
+	err := ctx.BindJSON(human)
 	if err != nil {
-		h.errorHandler.BadRequest(context, err.Error())
+		h.errorHandler.BadRequest(ctx, err.Error())
 		return nil
 	}
 	return human
 }
 
-func (h *Human) Create(context *gin.Context) {
-	human := h.bindContestToHumanToUpdateAndCreate(context)
+// Create godoc
+// @Summary create human
+// @Tags human
+// @Accept json
+// @Produce json
+// @Param message  body  HumanToUpdateAndCreate  true  "Human"
+// @Success 201 {object} map[string]interface{}
+// @Failure 400  {object}  map[string]interface{}
+// @Failure 500
+// @Router /human [post]
+func (h *Human) Create(ctx *gin.Context) {
+	human := h.bindContestToHumanToUpdateAndCreate(ctx)
 	if human == nil {
 		return
 	}
 	humanCreated, err := h.service.Create(human.convertToGORMModel())
 	if err != nil {
-		h.errorHandler.HandleError(context, err)
+		h.errorHandler.HandleError(ctx, err)
 		return
 	}
-	context.JSON(201, humanCreated)
+	ctx.JSON(201, humanCreated)
 }
 
-func (h *Human) Get(context *gin.Context) {
-	id, err := h.parseIdFromContext(context)
+// Get godoc
+// @Summary get one human by id
+// @Tags human
+// @Accept */*
+// @Produce json
+// @Param human_id path int true "Human ID"
+// @Success 200 {array} map[string]string
+// @Failure 400  {object}  map[string]interface{}
+// @Failure 404  {object}  map[string]interface{}
+// @Failure 500
+// @Router /human/{human_id} [get]
+func (h *Human) Get(ctx *gin.Context) {
+	id, err := h.parseIdFromContext(ctx)
 	if err != nil {
 		return
 	}
 	human, err := h.service.Get(id)
 	if err != nil {
-		h.errorHandler.HandleError(context, err)
+		h.errorHandler.HandleError(ctx, err)
 		return
 	}
-	context.JSON(200, human)
+	ctx.JSON(200, human)
 }
 
-func (h *Human) GetAll(context *gin.Context) {
+// GetAll godoc
+// @Summary get all humans
+// @Tags human
+// @Accept */*
+// @Produce json
+// @Success 200 {array} map[string]interface{}
+// @Failure 500
+// @Router /human [get]
+func (h *Human) GetAll(ctx *gin.Context) {
 	humans, err := h.service.GetAll()
 	if err != nil {
-		h.errorHandler.HandleError(context, err)
+		h.errorHandler.HandleError(ctx, err)
 		return
 	}
-	context.JSON(200, humans)
+	ctx.JSON(200, humans)
 }
 
-func (h *Human) Update(context *gin.Context) {
-	id, err := h.parseIdFromContext(context)
+// Update godoc
+// @Summary update one human by id
+// @Tags human
+// @Accept */*
+// @Produce json
+// @Param human_id path int true "Human ID"
+// @Param message  body  HumanToUpdateAndCreate  true  "Human"
+// @Success 200 {array} map[string]string
+// @Failure 400  {object}  map[string]interface{}
+// @Failure 404  {object}  map[string]interface{}
+// @Failure 500
+// @Router /human/{human_id} [put]
+func (h *Human) Update(ctx *gin.Context) {
+	id, err := h.parseIdFromContext(ctx)
 	if err != nil {
 		return
 	}
-	human := h.bindContestToHumanToUpdateAndCreate(context)
+	human := h.bindContestToHumanToUpdateAndCreate(ctx)
 	if human == nil {
 		return
 	}
@@ -88,21 +129,32 @@ func (h *Human) Update(context *gin.Context) {
 	humanToUpdate.ID = id
 	humanUpdated, err := h.service.Update(humanToUpdate)
 	if err != nil {
-		h.errorHandler.HandleError(context, err)
+		h.errorHandler.HandleError(ctx, err)
 		return
 	}
-	context.JSON(200, humanUpdated)
+	ctx.JSON(200, humanUpdated)
 }
 
-func (h *Human) Delete(context *gin.Context) {
-	id, err := h.parseIdFromContext(context)
+// Delete godoc
+// @Summary delete one human by id
+// @Tags human
+// @Accept */*
+// @Produce */*
+// @Param human_id path int true "Human ID"
+// @Success 204
+// @Failure 400  {object}  map[string]interface{}
+// @Failure 404  {object}  map[string]interface{}
+// @Failure 500
+// @Router /human/{human_id} [delete]
+func (h *Human) Delete(ctx *gin.Context) {
+	id, err := h.parseIdFromContext(ctx)
 	if err != nil {
 		return
 	}
 	err = h.service.Delete(id)
 	if err != nil {
-		h.errorHandler.HandleError(context, err)
+		h.errorHandler.HandleError(ctx, err)
 		return
 	}
-	context.Status(204)
+	ctx.Status(204)
 }
